@@ -1,0 +1,151 @@
+**Server**
+index.js
+
+const Express    =require('Express');
+const bodyparser  =require('body-parser');
+const cors       =require('Cors');
+const router     =Express.Router();
+const userRoute  =require('./User/userRoute');
+
+
+var app= Express();
+
+app.use(bodyParser.json());
+app.use(userRoute);
+app.use(cors());
+
+app.get('/*', function (req, res) {
+    res.status(404).send({error:"Invalid Operation"});
+});
+
+app.listen('3000',function (err){
+    if(err) {
+        console.log(err);
+        process.exit(-1);
+    }
+    console.log("Server listen port 3000");
+})
+
+
+**DBconfig.js**
+
+const mongoose =require('mongoose');
+const Schema   =mongoose.Schema;
+
+const CourseSchema  =new Schema({
+    name:{
+        type:String,
+        unique:true,
+        require:true
+    },
+    code:{
+        type:String,
+        unique:true,
+        require:true
+    },
+    passMark:{
+        type:Number,
+        require:true
+    },
+    lectureIncharge:{
+        type:String,
+        require:true
+    },
+
+
+});
+
+mongoose.model('Course' ,CourseSchema);
+
+mongoose.connect('mongodb://localhost:8081/demo', (err) =>{
+    if(err){
+        console.log(err);
+        process.exit(-1);
+    }
+    console.log('Connected to the DB');
+});
+
+module.exports =mongoose;
+
+
+
+**route.js**
+
+var express   =require('express');
+var router    =express.Router();
+var controller   =require('./userController');
+
+
+router.post('/', (req, res) => {
+    controller.add(req.body).then(response => {
+        res.status(response.status).send(response.message);
+    }).catch(err => {
+        res.status(err.status).send(err.message);
+    })
+});
+
+router.get('/', (req, res) => {
+    controller.getAll().then(response => {
+        res.status(response.status).send(response);
+    }).catch(err => {
+        res.status(err.status).send(err.message);
+    })
+});
+
+router.get('/:id', (req, res) => {
+    controller.getSingle(req.params.id).then(response => {
+        res.status(response.status).send(response);
+    }).catch(err => {
+        res.status(err.status).send(err.message);
+    })
+});
+
+
+module.exports= router;
+
+
+**controller.js**
+
+var mongoose = require('../DBconfig');
+var UserSchema  =mongoose.model('course');
+var controller =function(){
+
+
+    this.add=function(cname,cCode,pMark,lecture){
+        return new Promise((resolve, reject) => {
+            var user = new CourseSchema({
+                name:cname.name,
+                code:cCode.code,
+                passMark:pMark.passMark,
+                lectureIncharge:lecture.lectureIncharge
+
+            })
+            user.save().then(() => {
+                resolve({'status': 200, 'message':'added new course'});
+            }).catch(err => {
+                reject({'status': 404, 'message':'err:-'+err});
+            })
+        })
+    }
+
+    this.getAll = function() {
+        return new Promise((resolve, reject) => {
+            CourseSchema.find().exec().then(data => {
+                resolve({'status': 200, 'message':'get all data', 'data': data});
+            }).catch(err => {
+                reject({'status': 404, 'message':'err:-'+err});
+            })
+        })
+    }
+
+    this.getSingle = function(id) {
+        return new Promise((resolve, reject) => {
+            CourseSchema.find({_id: id}).exec().then(data => {
+                resolve({'status': 200, 'message':'get single data', 'data': data});
+            }).catch(err => {
+                reject({'status': 404, 'message':'err:-'+err});
+            })
+        })
+    }
+    }
+
