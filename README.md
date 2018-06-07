@@ -1,3 +1,0 @@
-# TestGitHub
-GitHub Tutorial
-YAthushan
