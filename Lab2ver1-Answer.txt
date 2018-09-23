@@ -1,0 +1,35 @@
+QUESTION 1:
+===========
+update table(
+             select p.members from projects_tbl p where p.id = 'M21') m
+set m.grade = 'A'
+where m.team_member.regno = 'DIT/M/0002' 
+(20 MARKS - 5 marks for ech line)
+
+QUESTION 2:
+===========
+
+  alter type project_typ add member function maxGPA return float cascade;
+
+  create or replace type body project_typ as
+  member function maxGPA return float is
+   maxGPA float;
+  begin
+    
+    select max(p.team_member.gpa) into maxGPA
+   from table(cast(members as member_t_ty)) p;
+
+  return maxGPA; 
+ 
+  end;
+end;
+
+(50 MARKS - 5 marks for each line)
+
+
+QUESTION 3:
+===========
+select p.title, p.maxGPA()
+from projects_tbl p
+order by p.maxGPA() desc;
+(30 MARKS - 10 marks for each line)
